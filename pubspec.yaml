@@ -1,6 +1,6 @@
 name: st8
 description: State management and full application helper.
-version: 1.0.0
+version: 1.0.2
 homepage: https://portifolio-alpha-orcin.vercel.app/
 
 environment:

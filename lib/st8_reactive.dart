@@ -3,11 +3,18 @@ import 'st8.dart';
 import 'st8_notifier.dart';
 
 class Reactive extends StatefulWidget {
-  Reactive(this.builder, {super.key, this.bindDependencies = const [Null]});
+  Reactive(
+      {super.key,
+      this.bindDependencies = const [Null],
+      this.elseShow = const SizedBox(),
+      this.showIf,
+      required this.builder});
 
   final List<dynamic> bindDependencies;
   final Widget Function() builder;
   final Key watcherKey = UniqueKey();
+  final bool Function()? showIf;
+  final Widget elseShow;
 
   @override
   State<Reactive> createState() => _ReactiveState();
@@ -31,9 +38,16 @@ class _ReactiveState extends State<Reactive> {
     }
   }
 
+  bool show() {
+    if (widget.showIf != null) {
+      return widget.showIf!();
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return widget.builder();
+    return show() ? widget.builder() : widget.elseShow;
   }
 
   @override

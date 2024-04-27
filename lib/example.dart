@@ -20,9 +20,11 @@ class MyWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Reactive(() => TextButton(
-          onPressed: myController.increment,
-          child: Text(myController.count.toString()),
-        ));
+    return Reactive(
+      builder: () => TextButton(
+        onPressed: myController.increment,
+        child: Text(myController.count.toString()),
+      ),
+    );
   }
 }
