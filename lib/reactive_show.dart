@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'st8.dart';
-import 'st8_notifier.dart';
+import 'reactive_manager.dart';
+import 'reactive_notifier.dart';
 
 class Reactive extends StatefulWidget {
   Reactive(
       {super.key,
-      this.bindDependencies = const [Null],
+      this.keys = const [Null],
       this.elseShow = const SizedBox(),
       this.showIf,
       required this.builder});
 
-  final List<dynamic> bindDependencies;
+  final List<dynamic> keys;
   final Widget Function() builder;
   final Key watcherKey = UniqueKey();
   final bool Function()? showIf;
@@ -24,16 +24,20 @@ class _ReactiveState extends State<Reactive> {
   @override
   void initState() {
     super.initState();
-    for (dynamic bind in widget.bindDependencies) {
-      St8Notifier? notifier = St8.notifiers[ObjectKey(bind)];
+    for (dynamic bind in widget.keys) {
+      ReactiveNotifier? notifier = Reactives.notifiers[ObjectKey(bind)];
       if (notifier != null) {
         if (context.findAncestorWidgetOfExactType<Reactive>() == null) {
-          notifier.updates[widget.watcherKey] = () => setState(() {});
+          notifier.updates[widget.watcherKey] = () {
+            if (mounted) setState(() {});
+          };
         }
       } else {
-        St8.notifiers[ObjectKey(bind)] = St8Notifier(
-            updates: {widget.watcherKey: () => setState(() {})},
-            dependency: ObjectKey(bind));
+        Reactives.notifiers[ObjectKey(bind)] = ReactiveNotifier(updates: {
+          widget.watcherKey: () {
+            if (mounted) setState(() {});
+          }
+        }, dependency: ObjectKey(bind));
       }
     }
   }
@@ -52,11 +56,11 @@ class _ReactiveState extends State<Reactive> {
 
   @override
   void dispose() {
-    for (dynamic bind in widget.bindDependencies) {
-      St8Notifier? notifier = St8.notifiers[ObjectKey(bind)];
+    for (dynamic bind in widget.keys) {
+      ReactiveNotifier? notifier = Reactives.notifiers[ObjectKey(bind)];
       notifier!.updates.remove(widget.watcherKey);
       if (notifier.updates.isEmpty) {
-        St8.notifiers.remove(ObjectKey(bind));
+        Reactives.notifiers.remove(ObjectKey(bind));
       }
     }
     super.dispose();

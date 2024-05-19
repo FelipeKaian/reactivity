@@ -1,6 +1,6 @@
-name: st8
-description: State management and full application helper.
-version: 1.0.2
+name: reactivity
+description: Reactivity and State Manipulation.
+version: 0.0.1
 homepage: https://portifolio-alpha-orcin.vercel.app/
 
 environment:
@@ -10,7 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_secure_storage: ^8.0.0
 
 dev_dependencies:
   flutter_test:

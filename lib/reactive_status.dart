@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'st8.dart';
-import 'st8_notifier.dart';
+import 'reactive_manager.dart';
+import 'reactive_notifier.dart';
 
 class ReactiveStatus<T> extends StatefulWidget {
   ReactiveStatus(this.cases,
-      {super.key, this.bindDependencies = const [Null], this.defaultCase});
+      {super.key, this.keys = const [Null], this.defaultCase});
 
   final Map<T, Widget Function()> cases;
   final Widget Function()? defaultCase;
-  final List<dynamic> bindDependencies;
+  final List<dynamic> keys;
   final Key watcherKey = UniqueKey();
 
   @override
@@ -19,23 +19,27 @@ class _ReactiveStatus<T> extends State<ReactiveStatus<T>> {
   @override
   void initState() {
     super.initState();
-    for (dynamic bind in widget.bindDependencies) {
-      St8Notifier? notifier = St8.notifiers[ObjectKey(bind)];
+    for (dynamic bind in widget.keys) {
+      ReactiveNotifier? notifier = Reactives.notifiers[ObjectKey(bind)];
       if (notifier != null) {
         if (context.findAncestorWidgetOfExactType<ReactiveStatus>() == null) {
-          notifier.updates[widget.watcherKey] = () => setState(() {});
+          notifier.updates[widget.watcherKey] = () {
+            if (mounted) setState(() {});
+          };
         }
       } else {
-        St8.notifiers[ObjectKey(bind)] = St8Notifier(
-            updates: {widget.watcherKey: () => setState(() {})},
-            dependency: ObjectKey(bind));
+        Reactives.notifiers[ObjectKey(bind)] = ReactiveNotifier(updates: {
+          widget.watcherKey: () {
+            if (mounted) setState(() {});
+          }
+        }, dependency: ObjectKey(bind));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    dynamic status = St8.statusOf(T);
+    dynamic status = Reactives.statusOf(T);
     if (status != null) {
       if (widget.cases.containsKey(status)) {
         return widget.cases[status]!();
@@ -46,11 +50,11 @@ class _ReactiveStatus<T> extends State<ReactiveStatus<T>> {
 
   @override
   void dispose() {
-    for (dynamic bind in widget.bindDependencies) {
-      St8Notifier? notifier = St8.notifiers[ObjectKey(bind)];
+    for (dynamic bind in widget.keys) {
+      ReactiveNotifier? notifier = Reactives.notifiers[ObjectKey(bind)];
       notifier!.updates.remove(widget.watcherKey);
       if (notifier.updates.isEmpty) {
-        St8.notifiers.remove(ObjectKey(bind));
+        Reactives.notifiers.remove(ObjectKey(bind));
       }
     }
     super.dispose();
