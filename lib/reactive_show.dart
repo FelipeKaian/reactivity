@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'reactive_manager.dart';
 
-class Reactive extends StatefulWidget {
-  Reactive(
+class ReactiveShow extends StatefulWidget {
+  ReactiveShow(
       {super.key,
       this.keys = const [Null],
       this.elseShow = const SizedBox(),
@@ -16,10 +16,10 @@ class Reactive extends StatefulWidget {
   final Widget elseShow;
 
   @override
-  State<Reactive> createState() => _ReactiveState();
+  State<ReactiveShow> createState() => _ReactiveShowState();
 }
 
-class _ReactiveState extends State<Reactive> {
+class _ReactiveShowState extends State<ReactiveShow> {
   @override
   void initState() {
     super.initState();
