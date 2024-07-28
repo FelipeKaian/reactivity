@@ -2,17 +2,15 @@ import 'package:flutter/material.dart';
 import 'reactive_manager.dart';
 
 class ReactiveShow extends StatefulWidget {
-  ReactiveShow(
-      {super.key,
-      this.keys = const [Null],
-      this.elseShow = const SizedBox(),
-      this.showIf,
-      required this.builder});
+  const ReactiveShow(
+    this.builder, {
+    super.key,
+    this.listenKeys = const [null],
+    this.elseShow = const SizedBox(),
+  });
 
-  final List<dynamic> keys;
-  final Widget Function() builder;
-  final Key watcherKey = UniqueKey();
-  final bool Function()? showIf;
+  final List<dynamic> listenKeys;
+  final Widget? Function() builder;
   final Widget elseShow;
 
   @override
@@ -20,29 +18,24 @@ class ReactiveShow extends StatefulWidget {
 }
 
 class _ReactiveShowState extends State<ReactiveShow> {
+  update() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
-    Reactives.notifier.updates.add(() {
-      if (mounted) setState(() {});
-    });
-  }
-
-  bool show() {
-    if (widget.showIf != null) {
-      return widget.showIf!();
-    }
-    return true;
+    Reactives.initReactiveWidget(widget.listenKeys, update);
   }
 
   @override
   Widget build(BuildContext context) {
-    return show() ? widget.builder() : widget.elseShow;
+    return widget.builder() ?? widget.elseShow;
   }
 
   @override
   void dispose() {
-    Reactives.notifier.updates.remove(widget.builder);
+    Reactives.disposeReactiveWidget(widget.listenKeys, update);
     super.dispose();
   }
 }

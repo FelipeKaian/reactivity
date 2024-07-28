@@ -2,22 +2,25 @@ import 'package:flutter/material.dart';
 import 'reactive_manager.dart';
 
 class Reactive extends StatefulWidget {
-  Reactive(this.builder, {super.key});
+  const Reactive(this.builder, {super.key, this.listenKeys = const [null]});
 
   final Widget Function() builder;
-  final Key watcherKey = UniqueKey();
+  final List<dynamic> listenKeys;
 
   @override
   State<Reactive> createState() => _ReactiveState();
 }
 
-class _ReactiveState extends State<Reactive> {
+class _ReactiveState extends State<Reactive>{
+
+  update() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
-    Reactives.notifier.updates.add(() {
-      if (mounted) setState(() {});
-    });
+    Reactives.initReactiveWidget(widget.listenKeys, update);
   }
 
   @override
@@ -27,7 +30,7 @@ class _ReactiveState extends State<Reactive> {
 
   @override
   void dispose() {
-    Reactives.notifier.updates.remove(widget.builder);
+    Reactives.disposeReactiveWidget(widget.listenKeys, update);
     super.dispose();
   }
 }
