@@ -1,59 +1,82 @@
-library reactive;
+/// Main library of the `reactive` package.
+///
+/// Provides a lightweight reactive state mechanism using `Key`-based identifiers
+/// and global enum-based status tracking.
+
+library reactivity;
 
 import 'dart:collection';
+import 'package:flutter/widgets.dart';
+
 import 'reactive_notifier.dart';
 
-class Reactives {
-  static final SplayTreeMap<Type, dynamic> _status = SplayTreeMap();
-  static SplayTreeMap<dynamic, ReactiveNotifier> notifiers = SplayTreeMap();
+/// Alias for reactive keys used to identify and refresh specific widgets.
+typedef ReactiveKey = Key;
 
-  static void refresh() {
-    notifiers[null]?.updateDependencies();
+/// Core class that manages reactive updates and status enums.
+///
+/// The [Reactivity] class holds global status values (usually enums) and
+/// provides methods to refresh individual widgets or all widgets via keys.
+class Reactivity {
+  /// Internal map that holds the latest value for each status enum,
+  /// using the enum type name as a key.
+  static final SplayTreeMap<String, dynamic> _status = SplayTreeMap();
+
+  /// Central notifier that tracks and updates widgets by their [ReactiveKey].
+  static ReactiveNotifier notifier = ReactiveNotifier();
+
+  /// Refreshes a specific widget associated with [key], or all widgets if [key] is null.
+  static void refresh(ReactiveKey? key) {
+    if (key != null) {
+      notifier.updateOnly(key);
+    } else {
+      notifier.updateAll();
+    }
   }
 
-  static void refreshOnly(dynamic key) {
-    notifiers[key]?.updateDependencies();
+  /// Returns the current status associated with a given enum [Type].
+  ///
+  /// Example:
+  /// ```dart
+  /// final current = Reactivity.statusOf(MyEnum);
+  /// ```
+  static dynamic statusOf(Type statusEnum) {
+    return _status[statusEnum.toString()];
   }
 
-  static dynamic statusOf(Type key) {
-    return _status[key];
+  /// Sets the value of a status enum. It can later be retrieved with [statusOf].
+  static void setStatus(dynamic enumValue) {
+    _status[enumValue.runtimeType.toString()] = enumValue;
   }
 
-  static void initStatus(dynamic status) {
-    _status[status.runtimeType] = status;
-  }
-
+  /// Sets the status and triggers a refresh for widgets associated with that enum type.
   static void refreshStatus(dynamic status) {
-    _status[status.runtimeType] = status;
-    refreshOnly(status.runtimeType);
-  }
-
-  static void refreshStatusOnly(dynamic status,dynamic key) {
-    _status[status.runtimeType] = status;
-    refreshOnly(key);
-  }
-
-  static void initReactiveWidget(List<dynamic> listenKeys, Function update) {
-    for (var key in listenKeys) {
-      Reactives.notifiers[key]?.updates.add(update);
-    }
-  }
-
-  static void disposeReactiveWidget(List<dynamic> listenKeys, Function update) {
-    for (var key in listenKeys) {
-      Reactives.notifiers[key]?.updates.remove(update);
-    }
+    _status[status.runtimeType.toString()] = status;
+    refresh(ValueKey(status.runtimeType));
   }
 }
 
-void refresh() {
-  Reactives.refresh();
+/// Global helper to refresh the widget associated with [key], or all if [key] is null.
+void refresh([ReactiveKey? key]) {
+  Reactivity.refresh(key);
 }
 
-void initStatus(dynamic status) {
-  Reactives.initStatus(status);
+/// Global helper to refresh all widgets.
+void refreshAll() {
+  Reactivity.refresh(null);
 }
 
+/// Global helper to refresh only the widget associated with [key].
+void refreshOnly(ReactiveKey key) {
+  Reactivity.refresh(key);
+}
+
+/// Global helper to set the current status of an enum.
+void setStatus(dynamic status) {
+  Reactivity.setStatus(status);
+}
+
+/// Global helper to set and refresh status-based widgets.
 void refreshStatus(dynamic status) {
-  Reactives.refreshStatus(status);
+  Reactivity.refreshStatus(status);
 }

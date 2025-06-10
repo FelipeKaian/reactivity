@@ -1,108 +1,130 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# reactivity
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
+A minimal and powerful reactive state manager for Flutter, built around a singleton pattern with global status tracking.  
+`reactivity` lets you rebuild widgets by key, manage global states with enums, and conditionally render UI with zero boilerplate.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages).
--->
+> ⚡ Fast to learn, simple to use, and flexible for complex apps.
 
-O Reactive é um gerenciador de estado dinâmico fundamentado em Singleton que permite o gerenciamento de 
-variáveis de forma global, orientada a condições, orientada a estados e principalmente de forma reativa. 
-A curva de aprendizado é muitocurta assim como a implementação, mas ainda assim é possível realizar 
-implementações mais robutas que resultam em um maior controle e em uma maior performance.
-## Features
+---
 
-refresh(dynamic dependency):
-Notifica um ouvinte específico para atualizar seu estado.
+## ✨ Features
 
-statusOf(String key):
-Retorna o status de um Worker.
+- `refresh([key])`: Rebuilds a widget by `ReactiveKey`, or all if `key == null`.
+- `refreshOnly(key)`: Refreshes a specific reactive widget.
+- `refreshAll()`: Refreshes all reactive widgets.
+- `refreshStatus(status)`: Updates a global status and refreshes related widgets.
+- `setStatus(status)`: Sets a global enum status without refreshing.
+- `statusOf(Type)`: Returns the current value of a tracked status.
+- Widgets:
+  - `Reactive`: Makes any widget rebuildable on-demand.
+  - `ReactiveStatus`: Switch-case reactive widget for enums.
+  - `ReactiveShow`: Conditionally shows widgets with reactive logic.
 
-setStatus(String key, dynamic status):
-Define o status de um Worker.
+---
 
-## Getting started
+## 🚀 Getting started
 
-O Reactive não necessita de setup apenas instale o package e use onde precisar! :)
+No setup required. Just install the package and use:
 
-## Usage
+```yaml
+dependencies:
+  reactivity: ^1.0.0
+```
+
+Import the library where needed:
 
 ```dart
+import 'package:reactivity/reactivity.dart';
+```
 
+---
+
+## 🧪 Usage
+
+### 1. Define an enum
+
+```dart
 enum ExampleStatus {
   loading,
-  sucess,
+  success,
   fail,
 }
+```
 
+### 2. Create a controller
+
+```dart
 class MyController {
   List<String> myExamples = [];
   int counter = 0;
 
-  myFunction() {
+  void fetchExamples() {
     setStatus(ExampleStatus.loading);
-    return http.get("/examples")
-        .then((examples) {
-      myExamples = examples;
-      refreshStatus(ExampleStatus.sucess); //status da requisição alterado para sucesso e atualiza os componentes de tela reativos
+    Future.delayed(const Duration(seconds: 1)).then((_) {
+      myExamples = ['A', 'B', 'C'];
+      refreshStatus(ExampleStatus.success);
     }).catchError((err) {
-      refreshStatus(ExampleStatus.fail); //status da requisição alterado para falha e atualiza os componentes de tela reativos
+      refreshStatus(ExampleStatus.fail);
     });
   }
 
-  count() {
+  void increment() {
     counter++;
-    refresh(); //atualiza os componentes de tela reativos
+    refresh();
   }
 }
+```
 
+### 3. Build the reactive UI
+
+```dart
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  MyController myController = MyController();
+  final controller = MyController();
 
   @override
   void initState() {
     super.initState();
-    myController.myFunction();
+    controller.fetchExamples();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Reactive(() => Text("Counter: ${myController.counter}")), // deixa o texto reativo
+        title: Reactive(() => Text("Counter: ${controller.counter}")),
       ),
-      body: ReactiveStatus<ExampleStatus>(// pertime que a tela seja reativa e que altere seus componentes com base no status
-        {
-          ExampleStatus.sucess: () => ExampleListView(items: myController.myExamples),// mostra a lista caso seja sucess
-          ExampleStatus.fail: () => const Text(" fail :( "),// mostra a erro caso seja fail
-          ExampleStatus.loading: () => const CircularProgressIndicator(),// mostra um ProgressIndicator caso seja loading
-        },
-      ),
+      body: ReactiveStatus<ExampleStatus>({
+        ExampleStatus.success: () => ListView(
+              children: controller.myExamples
+                  .map((e) => ListTile(title: Text(e)))
+                  .toList(),
+            ),
+        ExampleStatus.fail: () => const Center(child: Text("Fail :(")),
+        ExampleStatus.loading: () => const Center(child: CircularProgressIndicator()),
+      }),
       floatingActionButton: FloatingActionButton(
-        onPressed: myController.count,
+        onPressed: controller.increment,
         child: const Icon(Icons.add),
       ),
     );
   }
 }
-
 ```
 
-## Additional information
+---
 
-Me chamo Felipe Kaian, sou o autor deste pacote, vocês podem me econtrar no LinkedIn ou 
-através do email felipekaianmutti@gmail.com, podem trazer melhorias, sugestões e feedbacks,
-quanto mais melhor, espero que esse pacote ajude nossa comunidade Flutter a crescer cada vez mais!
+## 📫 Author
+
+Created by **Felipe Kaian**  
+📧 felipekaianmutti@gmail.com  
+🔗 [LinkedIn](https://www.linkedin.com/in/felipekaian)
+
+Feel free to contribute, suggest improvements, or report issues.  
+Let’s grow the Flutter community together! 🚀
