@@ -1,62 +1,91 @@
 import 'package:flutter/material.dart';
-import 'reactive_manager.dart';
+import 'reactivity.dart';
 
-/// A reactive widget that displays different UI depending on the current status of a given type [T].
+/// A widget that conditionally renders content based on the current reactive status of type [T].
 ///
-/// The [ReactiveStatus] widget listens to changes in the enum status stored in [Reactivity].
-/// It rebuilds automatically when the associated status is updated.
+/// It listens to global status changes triggered by [refreshStatus], and builds
+/// the corresponding widget defined in [cases]. If the current status is not handled,
+/// it falls back to [defaultCase] or renders an empty widget.
+///
+/// Useful for managing reactive UI flow based on enum-like states.
+///
+/// ### Example:
+/// ```dart
+/// enum MyStatus { loading, success, error }
+///
+/// ReactiveStatus<MyStatus>(
+///   cases: {
+///     MyStatus.loading: () => CircularProgressIndicator(),
+///     MyStatus.success: () => Text("Done!"),
+///     MyStatus.error: () => Text("Oops!"),
+///   },
+///   defaultCase: () => Text("Idle"),
+/// )
+///
+/// // Somewhere else:
+/// refreshStatus(MyStatus.loading);
+/// ```
 class ReactiveStatus<T> extends StatefulWidget {
-  /// Creates a [ReactiveStatus] widget.
+  /// Creates a [ReactiveStatus] widget that reacts to changes in the global status of type [T].
   ///
-  /// - [cases] is a map of enum values to widget builders.
-  /// - [defaultCase] is used if no matching enum case is found.
+  /// [cases] must be provided to map each status to a widget builder.
+  /// If [reactiveKey] is not provided, it defaults to the runtime type of [T].
   ReactiveStatus(
     this.cases, {
     super.key,
     this.defaultCase,
-  });
+    Key? reactiveKey,
+  }) : reactiveKey = reactiveKey ?? ValueKey(T);
 
-  /// A map that associates enum values of type [T] with widget builders.
+  /// A map of status values to widget builder functions.
+  ///
+  /// When the current status matches a key in this map, the corresponding
+  /// builder function is used to construct the widget.
   final Map<T, Widget Function()> cases;
 
-  /// Optional fallback widget builder when no match is found in [cases].
+  /// A fallback builder used when no case matches the current status.
+  ///
+  /// If null, a [SizedBox] (empty widget) is shown.
   final Widget Function()? defaultCase;
 
-  /// A reactive key uniquely identifying this status type.
-  final Key reactiveKey = ValueKey(T);
+  /// The key used to subscribe this widget to status updates.
+  ///
+  /// Defaults to [ValueKey] of type [T].
+  final Key reactiveKey;
 
   @override
   State<ReactiveStatus<T>> createState() => _ReactiveStatus<T>();
 }
 
 class _ReactiveStatus<T> extends State<ReactiveStatus<T>> {
+  /// Unique key used internally to identify this widget's subscription.
+  final UniqueKey _uniqueKey = UniqueKey();
+
   @override
   void initState() {
     super.initState();
-    // Register this widget to be updated when status of type [T] changes.
-    Reactivity.notifier.addUpdate(widget.reactiveKey, this);
+    // Register this state to listen for updates tied to the provided reactiveKey.
+    Reactivity.notifier.addUpdate(widget.reactiveKey, _uniqueKey, this);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Retrieve the current status of type [T].
-    dynamic status = Reactivity.statusOf(T);
+    // Get the current global status of type T.
+    T status = getStatus<T>();
 
-    // If a valid status is found and it matches a case, render that widget.
-    if (status != null) {
-      if (widget.cases.containsKey(status)) {
-        return widget.cases[status]!();
-      }
+    // If there's a widget builder defined for this status, return it.
+    if (widget.cases.containsKey(status)) {
+      return widget.cases[status]!();
     }
 
-    // If no match, fallback to the default case or an empty widget.
-    return widget.defaultCase?.call() ?? SizedBox();
+    // Otherwise, return the fallback widget or an empty box.
+    return widget.defaultCase?.call() ?? Nothing();
   }
 
   @override
   void dispose() {
-    // Unregister from Reactivity system to avoid memory leaks.
-    Reactivity.notifier.removeUpdate(widget.reactiveKey);
+    // Unsubscribe this state to avoid memory leaks.
+    Reactivity.notifier.removeUpdate(widget.reactiveKey, _uniqueKey);
     super.dispose();
   }
 }

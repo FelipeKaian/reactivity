@@ -1,37 +1,35 @@
-# reactivity
+# ⚡ reactivity
 
-A minimal and powerful reactive state manager for Flutter, built around a singleton pattern with global status tracking.  
-`reactivity` lets you rebuild widgets by key, manage global states with enums, and conditionally render UI with zero boilerplate.
+A minimal and elegant state management solution for Flutter.  
+Rebuild only what matters — with zero boilerplate.
 
-> ⚡ Fast to learn, simple to use, and flexible for complex apps.
+> ✅ Built for performance  
+> 🧠 Easy to learn  
+> 🎯 Fully compatible with Flutter's widget tree  
+> 💙 Ideal for UI-driven apps
 
 ---
 
 ## ✨ Features
 
-- `refresh([key])`: Rebuilds a widget by `ReactiveKey`, or all if `key == null`.
-- `refreshOnly(key)`: Refreshes a specific reactive widget.
-- `refreshAll()`: Refreshes all reactive widgets.
-- `refreshStatus(status)`: Updates a global status and refreshes related widgets.
-- `setStatus(status)`: Sets a global enum status without refreshing.
-- `statusOf(Type)`: Returns the current value of a tracked status.
-- Widgets:
-  - `Reactive`: Makes any widget rebuildable on-demand.
-  - `ReactiveStatus`: Switch-case reactive widget for enums.
-  - `ReactiveShow`: Conditionally shows widgets with reactive logic.
+- 🔄 `refresh()` — triggers rebuilds globally or by key
+- 🚦 `refreshStatus()` — reactive flow based on enum-like global status
+- 🧱 `ValueState`, `InitedState`, `VoidState` — simple state containers with builder linkage
+- 🧩 `Reactive`, `ReactiveStatus`, `ReactiveState`, `ReactiveShow` — widgets that rebuild declaratively
+- ❓ `ReactiveNullable`, `ReactiveNullableList` — null-safe conditionals with expressive UI fallback
 
 ---
 
-## 🚀 Getting started
+## 🧠 Getting Started
 
-No setup required. Just install the package and use:
+Add the dependency:
 
 ```yaml
 dependencies:
   reactivity: ^1.0.0
 ```
 
-Import the library where needed:
+Import in your Dart code:
 
 ```dart
 import 'package:reactivity/reactivity.dart';
@@ -39,92 +37,158 @@ import 'package:reactivity/reactivity.dart';
 
 ---
 
-## 🧪 Usage
+## 🚀 Usage
 
-### 1. Define an enum
+### Reactive widget (global rebuild)
 
 ```dart
-enum ExampleStatus {
-  loading,
-  success,
-  fail,
-}
+int counter = 0;
+
+Reactive(() => Text('Counter: $counter'));
+
+// later
+counter++;
+refresh();
 ```
 
-### 2. Create a controller
+### Reactive key (rebuild one widget only)
 
 ```dart
-class MyController {
-  List<String> myExamples = [];
-  int counter = 0;
+final myKey = ReactiveKey();
 
-  void fetchExamples() {
-    setStatus(ExampleStatus.loading);
-    Future.delayed(const Duration(seconds: 1)).then((_) {
-      myExamples = ['A', 'B', 'C'];
-      refreshStatus(ExampleStatus.success);
-    }).catchError((err) {
-      refreshStatus(ExampleStatus.fail);
-    });
-  }
+Reactive(
+  () => Text("Hello"),
+  reactiveKey: myKey,
+);
 
-  void increment() {
-    counter++;
-    refresh();
-  }
-}
-```
-
-### 3. Build the reactive UI
-
-```dart
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  final controller = MyController();
-
-  @override
-  void initState() {
-    super.initState();
-    controller.fetchExamples();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Reactive(() => Text("Counter: ${controller.counter}")),
-      ),
-      body: ReactiveStatus<ExampleStatus>({
-        ExampleStatus.success: () => ListView(
-              children: controller.myExamples
-                  .map((e) => ListTile(title: Text(e)))
-                  .toList(),
-            ),
-        ExampleStatus.fail: () => const Center(child: Text("Fail :(")),
-        ExampleStatus.loading: () => const Center(child: CircularProgressIndicator()),
-      }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.increment,
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
+// later
+refreshOnly(myKey);
 ```
 
 ---
 
-## 📫 Author
+## 🧱 State management
 
-Created by **Felipe Kaian**  
-📧 felipekaianmutti@gmail.com  
-🔗 [LinkedIn](https://www.linkedin.com/in/felipekaian)
+### InitedState
 
-Feel free to contribute, suggest improvements, or report issues.  
-Let’s grow the Flutter community together! 🚀
+```dart
+final name = InitedState<String>("Kaian");
+
+ReactiveState(name.on((value) => Text("Hello $value")));
+
+// Update
+name.refreshWith("Felipe");
+```
+
+### ValueState (without initial value)
+
+```dart
+final count = ValueState<int>();
+
+ReactiveState(count.on((value) => Text('Count: $value')));
+
+// Initialize or update
+count.refreshWith(1);
+count.refreshUpdate((value) => value! + 1);
+```
+
+### VoidState (no data, just trigger)
+
+```dart
+final trigger = VoidState();
+
+ReactiveState(trigger.on(() => Text("Triggered!")));
+
+// Trigger it
+trigger.refresh();
+```
+
+---
+
+## 🚦 ReactiveStatus
+
+```dart
+enum Status { loading, success, error }
+
+refreshStatus(Status.loading);
+
+ReactiveStatus<Status>(
+  cases: {
+    Status.loading: () => CircularProgressIndicator(),
+    Status.success: () => Text("Done!"),
+    Status.error: () => Text("Oops"),
+  },
+  defaultCase: () => Text("Idle"),
+);
+```
+
+---
+
+## 🎭 Conditional builders
+
+### ReactiveShow
+
+```dart
+bool isLogged = false;
+
+ReactiveShow(
+  showIf: () => isLogged,
+  builder: () => Text("Welcome"),
+  elseShow: Text("Login required"),
+);
+
+// Later
+isLogged = true;
+refresh();
+```
+
+### ReactiveNullable
+
+```dart
+String? username;
+
+ReactiveNullable<String>(
+  value: username,
+  builder: (name) => Text("Hi $name"),
+  ifNull: Text("No user"),
+);
+
+// Update
+username = "Felipe";
+refresh();
+```
+
+### ReactiveNullableList
+
+```dart
+List<String>? items;
+
+ReactiveNullableList<String>(
+  values: items,
+  builder: (list) => ListView(children: list.map(Text.new).toList()),
+  ifNull: CircularProgressIndicator(),
+  ifEmpty: Text("No items"),
+);
+```
+
+---
+
+## ✅ Why use `reactivity`?
+
+- Simple, focused API
+- No context passing, no scopes
+- Works seamlessly with Flutter widgets
+- Declarative and explicit
+- Ideal for UI-state binding and visual feedback
+
+---
+
+## 💬 Contributing
+
+Feel free to open issues, suggest features or contribute pull requests.
+
+---
+
+## 🧾 License
+
+MIT License © Felipe Kaian

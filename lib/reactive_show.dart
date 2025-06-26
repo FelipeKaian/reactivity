@@ -1,52 +1,79 @@
 import 'package:flutter/material.dart';
-import 'reactive_manager.dart';
+import 'reactivity.dart';
 
-/// A conditional reactive widget that rebuilds based on changes tracked by [Reactivity].
+/// A conditional reactive widget that rebuilds when the associated [reactiveKey] is triggered.
 ///
-/// [ReactiveShow] allows conditionally displaying a widget depending on an optional
-/// `showIf` function, and auto-registers itself with the [Reactivity] system for updates.
+/// [ReactiveShow] allows you to conditionally render a widget based on the result
+/// of a [showIf] predicate. When [showIf] returns `true`, [builder] is shown;
+/// otherwise, [elseShow] is rendered (defaults to [Nothing]).
+///
+/// It listens to changes via [refresh] or [refreshOnly] using the provided [reactiveKey].
+///
+/// ---
+///
+/// ### Example:
+/// ```dart
+/// bool isLoggedIn = false;
+///
+/// ReactiveShow(
+///   showIf: () => isLoggedIn,
+///   builder: () => Text("Welcome back!"),
+///   elseShow: Text("Please sign in"),
+/// )
+///
+/// // Later...
+/// isLoggedIn = true;
+/// refresh(); // Rebuilds the widget to reflect the new condition.
+/// ```
 class ReactiveShow extends StatefulWidget {
-  /// Creates a [ReactiveShow] widget.
+  /// Creates a conditional reactive widget.
   ///
-  /// - [keys] are used to associate this widget with reactive updates.
-  /// - [builder] defines the widget to show if `showIf` is `true` (or `null`).
-  /// - [elseShow] is shown when `showIf` is `false`.
+  /// [builder] is shown when [showIf] evaluates to true. Otherwise, [elseShow] is rendered.
+  /// If [reactiveKey] is not provided, it defaults to a generic reactive key.
   ReactiveShow({
     super.key,
-    this.keys = const [Null],
-    this.elseShow = const SizedBox(),
+    this.elseShow = const Nothing(),
     this.showIf,
     required this.builder,
-  });
+    Key? reactiveKey,
+  }) : reactiveKey = reactiveKey ?? ValueKey(ReactivityTypeEnum.reactive);
 
-  /// A list of values (usually enums or identifiers) this widget depends on.
-  final List<dynamic> keys;
-
-  /// Builder function used to build the visible widget when `showIf` is true.
+  /// The widget builder shown when [showIf] returns true.
   final Widget Function() builder;
 
-  /// Internal unique key used to identify this widget within the [Reactivity] system.
-  final Key reactiveKey = UniqueKey();
-
-  /// Optional condition to determine whether [builder] or [elseShow] should be shown.
+  /// A predicate that determines whether [builder] or [elseShow] is rendered.
+  ///
+  /// If null, defaults to always showing [builder].
   final bool Function()? showIf;
 
-  /// Widget to show when `showIf` returns `false`.
+  /// The fallback widget shown when [showIf] returns false.
+  ///
+  /// Defaults to [Nothing], which is an alias for [SizedBox].
   final Widget elseShow;
+
+  /// The reactive key this widget listens to.
+  ///
+  /// Use this key with [refreshOnly] to trigger an update.
+  final Key reactiveKey;
 
   @override
   State<ReactiveShow> createState() => _ReactiveShowState();
 }
 
 class _ReactiveShowState extends State<ReactiveShow> {
+  /// Unique identifier for managing this widget’s subscription.
+  final UniqueKey _uniqueKey = UniqueKey();
+
   @override
   void initState() {
     super.initState();
-    // Register this widget for updates in the Reactivity system.
-    Reactivity.notifier.addUpdate(widget.reactiveKey, this);
+    // Subscribe to updates for this reactive key.
+    Reactivity.notifier.addUpdate(widget.reactiveKey, _uniqueKey, this);
   }
 
-  /// Evaluates the [showIf] condition, defaults to true if not provided.
+  /// Evaluates the show condition.
+  ///
+  /// If [showIf] is null, defaults to true.
   bool show() {
     if (widget.showIf != null) {
       return widget.showIf!();
@@ -56,14 +83,14 @@ class _ReactiveShowState extends State<ReactiveShow> {
 
   @override
   Widget build(BuildContext context) {
-    // Rebuilds the widget conditionally based on [showIf].
+    // Render builder or elseShow based on condition.
     return show() ? widget.builder() : widget.elseShow;
   }
 
   @override
   void dispose() {
-    // Unregister from Reactivity system to avoid memory leaks.
-    Reactivity.notifier.removeUpdate(widget.reactiveKey);
+    // Unsubscribe from notifier updates.
+    Reactivity.notifier.removeUpdate(widget.reactiveKey, _uniqueKey);
     super.dispose();
   }
 }
