@@ -1,24 +1,25 @@
+
 # ⚡ reactivity
 
 ![Logo](https://raw.githubusercontent.com/felipekaian/reactivity/main/assets/logo.svg)
 
-A minimal and elegant state management solution for Flutter.  
-Rebuild only what matters — with zero boilerplate.
+**A minimal and elegant state management solution for Flutter**  
+_Rebuild only what matters — with zero boilerplate._
 
-> ✅ Built for performance  
-> 🧠 Easy to learn  
-> 🎯 Fully compatible with Flutter's widget tree  
-> 💙 Ideal for UI-driven apps
+> ✅ **Built for performance**  
+> 🧠 **Easy to learn**  
+> 🎯 **Flutter-native**  
+> 💙 **Perfect for UI-driven apps**
 
 ---
 
-## 🧨 The Power of `ValueState` + Dart Records
+## 🧨 The Power of `ValueState` + Named Records
 
-> The **biggest highlight** of `reactivity` is its seamless support for **Dart Records** via `ValueState`.
+> The **core feature** of `reactivity` is seamless support for **Dart Records** via `ValueState`.
 
-With `ValueState`, you can manage multiple related state variables — like name, age, and email — using a single named record.
+With `ValueState`, you manage multiple pieces of state — like `name`, `age`, `isAdmin` — using **a single named record**, with full type safety and zero boilerplate.
 
-### 🤯 Goodbye boilerplate, hello Named Records!
+### 🤯 Example: Clean and Reactive
 
 ```dart
 final user = ValueState<({String name, int age, bool isAdmin})>();
@@ -30,26 +31,26 @@ ReactiveState(user.on(
 user.refreshWith((name: 'Felipe', age: 30, isAdmin: true));
 ```
 
-✔️ No classes  
-✔️ Fully typed  
-✔️ Instantly reactive  
-✔️ Native Dart syntax
+✔ No classes  
+✔ Fully typed  
+✔ Instantly reactive  
+✔ Native Dart syntax
 
-If you love Dart's `record` syntax — especially named records — this will feel like magic.
-
----
-
-## ✨ Features
-
-- 🔄 `refresh()` — triggers rebuilds globally or by key
-- 🚦 `refreshStatus()` — reactive flow based on enum-like global status
-- 🧱 `ValueState`, `InitedState`, `VoidState` — simple state containers with builder linkage
-- 🧩 `Reactive`, `ReactiveStatus`, `ReactiveState`, `ReactiveShow` — widgets that rebuild declaratively
-- ❓ `ReactiveNullable`, `ReactiveNullableList` — null-safe conditionals with expressive UI fallback
+> _If you love Dart’s record syntax, this will feel like magic._
 
 ---
 
-## 🧠 Getting Started
+## ✨ Features Overview
+
+- 🔄 `refresh()` — global rebuild trigger  
+- 🧩 `Reactive`, `ReactiveState`, `ReactiveStatus`, `ReactiveShow` — declarative reactive widgets  
+- 🧱 `ValueState`, `InitedState`, `VoidState` — flexible state containers  
+- 🚦 `refreshStatus()` — reactive flow using enums  
+- ❓ `ReactiveNullable`, `ReactiveNullableList` — handle nulls & empty states gracefully  
+
+---
+
+## 🚀 Getting Started
 
 Add the dependency:
 
@@ -58,7 +59,7 @@ dependencies:
   reactivity: ^1.0.0
 ```
 
-Import in your Dart code:
+Import it in your Dart file:
 
 ```dart
 import 'package:reactivity/reactivity.dart';
@@ -66,75 +67,67 @@ import 'package:reactivity/reactivity.dart';
 
 ---
 
-## 🚀 Usage
+## ⚙ Usage Examples
 
-### Reactive widget (global rebuild)
+### Global rebuild
 
 ```dart
 int counter = 0;
 
 Reactive(() => Text('Counter: $counter'));
 
-// later
 counter++;
-refresh();
+refresh(); // Triggers rebuild
 ```
 
-### Reactive key (rebuild one widget only)
+### Rebuild by key
 
 ```dart
 final myKey = ReactiveKey();
 
-Reactive(
-  () => Text("Hello"),
-  reactiveKey: myKey,
-);
+Reactive(() => Text("Hello"), reactiveKey: myKey);
 
-// later
-refreshOnly(myKey);
+refreshOnly(myKey); // Rebuild just this one
 ```
 
 ---
 
-## 🧱 Other State Tools
+## 🧱 State Containers
 
-### InitedState
+### `InitedState`
 
 ```dart
 final name = InitedState<String>("Kaian");
 
 ReactiveState(name.on((value) => Text("Hello $value")));
 
-// Update
 name.refreshWith("Felipe");
 ```
 
-### ValueState (primitive or nullable types)
+### `ValueState`
 
 ```dart
 final count = ValueState<int>();
 
 ReactiveState(count.on((value) => Text('Count: $value')));
 
-// Initialize or update
 count.refreshWith(1);
 count.refreshUpdate((value) => value! + 1);
 ```
 
-### VoidState (no data, just trigger)
+### `VoidState`
 
 ```dart
 final trigger = VoidState();
 
 ReactiveState(trigger.on(() => Text("Triggered!")));
 
-// Trigger it
 trigger.refresh();
 ```
 
 ---
 
-## 🚦 ReactiveStatus
+## 🚦 `ReactiveStatus`
 
 ```dart
 enum Status { loading, success, error }
@@ -153,9 +146,9 @@ ReactiveStatus<Status>(
 
 ---
 
-## 🎭 Conditional builders
+## 🎭 Conditional Rendering
 
-### ReactiveShow
+### `ReactiveShow`
 
 ```dart
 bool isLogged = false;
@@ -166,12 +159,11 @@ ReactiveShow(
   elseShow: Text("Login required"),
 );
 
-// Later
 isLogged = true;
 refresh();
 ```
 
-### ReactiveNullable
+### `ReactiveNullable`
 
 ```dart
 String? username;
@@ -182,12 +174,11 @@ ReactiveNullable<String>(
   ifNull: Text("No user"),
 );
 
-// Update
 username = "Felipe";
 refresh();
 ```
 
-### ReactiveNullableList
+### `ReactiveNullableList`
 
 ```dart
 List<String>? items;
@@ -202,22 +193,23 @@ ReactiveNullableList<String>(
 
 ---
 
-## ✅ Why use `reactivity`?
+## ✅ Why `reactivity`?
 
-- 🌟 Best-in-class support for Dart **Named Records**
-- 🧼 Simple, focused API
-- 🚫 No context, no classes, no scopes
-- 🎯 Works with Flutter’s widget tree naturally
-- 💬 Declarative, explicit, beautiful
-
----
-
-## 💬 Contributing
-
-Feel free to open issues, suggest features or contribute pull requests.
+- 🌟 First-class support for Dart **Named Records**
+- 🚫 No `context`, no `classes`, no scope hassles
+- 🧼 Clean and minimal API
+- 💬 Declarative, expressive, and beautiful
+- 🎯 Native to the Flutter widget tree
 
 ---
 
-## 🧾 License
+## 🤝 Contributing
+
+Got ideas or found bugs?  
+Feel free to open issues or submit a pull request. Let's build this together!
+
+---
+
+## 📄 License
 
 MIT License © Felipe Kaian
