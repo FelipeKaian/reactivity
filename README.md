@@ -1,5 +1,7 @@
 # ⚡ reactivity
 
+![Logo](https://raw.githubusercontent.com/felipekaian/reactivity/main/assets/logo.svg)
+
 A minimal and elegant state management solution for Flutter.  
 Rebuild only what matters — with zero boilerplate.
 
@@ -7,6 +9,33 @@ Rebuild only what matters — with zero boilerplate.
 > 🧠 Easy to learn  
 > 🎯 Fully compatible with Flutter's widget tree  
 > 💙 Ideal for UI-driven apps
+
+---
+
+## 🧨 The Power of `ValueState` + Dart Records
+
+> The **biggest highlight** of `reactivity` is its seamless support for **Dart Records** via `ValueState`.
+
+With `ValueState`, you can manage multiple related state variables — like name, age, and email — using a single named record.
+
+### 🤯 Goodbye boilerplate, hello Named Records!
+
+```dart
+final user = ValueState<({String name, int age, bool isAdmin})>();
+
+ReactiveState(user.on(
+  (u) => Text('Name: ${u.name}, Age: ${u.age}, Admin: ${u.isAdmin}'),
+));
+
+user.refreshWith((name: 'Felipe', age: 30, isAdmin: true));
+```
+
+✔️ No classes  
+✔️ Fully typed  
+✔️ Instantly reactive  
+✔️ Native Dart syntax
+
+If you love Dart's `record` syntax — especially named records — this will feel like magic.
 
 ---
 
@@ -67,7 +96,7 @@ refreshOnly(myKey);
 
 ---
 
-## 🧱 State management
+## 🧱 Other State Tools
 
 ### InitedState
 
@@ -80,7 +109,7 @@ ReactiveState(name.on((value) => Text("Hello $value")));
 name.refreshWith("Felipe");
 ```
 
-### ValueState (without initial value)
+### ValueState (primitive or nullable types)
 
 ```dart
 final count = ValueState<int>();
@@ -175,11 +204,11 @@ ReactiveNullableList<String>(
 
 ## ✅ Why use `reactivity`?
 
-- Simple, focused API
-- No context passing, no scopes
-- Works seamlessly with Flutter widgets
-- Declarative and explicit
-- Ideal for UI-state binding and visual feedback
+- 🌟 Best-in-class support for Dart **Named Records**
+- 🧼 Simple, focused API
+- 🚫 No context, no classes, no scopes
+- 🎯 Works with Flutter’s widget tree naturally
+- 💬 Declarative, explicit, beautiful
 
 ---
 
